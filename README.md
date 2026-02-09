@@ -1,27 +1,37 @@
 # Electronic Sign Simulator
 
-Interactive 6×36 pixel electronic sign simulator. Create views from pixel coordinates or text, render them as ASCII art, and manage them with a simple command-line interface.
+Interactive 6×36 pixel electronic sign simulator written in Go. Create views from pixel coordinates or text, render them as ASCII art, and manage them with a simple command-line interface.
 
 ## Requirements
 
-- **Python 3.10+** (uses `X | Y` union syntax and pattern matching)
-- No external dependencies
+- **Go 1.21+** (uses modern Go features)
+- No external dependencies - uses only Go standard library
 
 ## Project Structure
 
 ```
 electronic-sign/
-├── main.py          # Entry point
-├── sign.py          # Pixel and View classes (core domain)
-├── fonts.py         # Bitmap font rendering
-├── cli.py           # Command-based interactive interface
-└── test_sign.py     # Test suite
+├── main.go         # Entry point
+├── sign.go         # Pixel and View types (core domain)
+├── fonts.go        # Bitmap font rendering
+├── cli.go          # Command-based interactive interface
+├── sign_test.go    # Test suite
+└── go.mod          # Go module definition
 ```
 
 ## Quick Start
 
 ```bash
-python3.13 main.py
+# Build
+go build
+
+# Run
+./electronic-sign
+```
+
+Or run directly:
+```bash
+go run .
 ```
 
 ## Usage
@@ -79,7 +89,7 @@ Saved views:
 ## Running Tests
 
 ```bash
-python3.13 -m unittest test_sign -v
+go test -v
 ```
 
 **Test Coverage:**
@@ -91,29 +101,33 @@ python3.13 -m unittest test_sign -v
 
 ## Design Highlights
 
-### Immutable Value Objects
+### Value Semantics
 
-```python
-pixel = Pixel(0, 5)
-pixel.row  # 0 (read-only)
+```go
+pixel := Pixel{Row: 0, Col: 5}  // Immutable struct
+// Comparable by value, usable as map key
 ```
 
-Pixels use `__slots__` for memory efficiency and implement proper equality/hashing for use in sets and dicts.
+Pixels are structs (not pointers) and use Go's value equality for comparison.
 
 ### Sparse Grid Representation
 
-Views store only active (on) pixels in a set, not a full 2D array. Memory-efficient for partially lit signs.
+Views store only active (on) pixels in a map, not a full 2D array. Memory-efficient for partially lit signs.
 
 ### Auto-Detection Parsing
 
-```python
-View.parse("A0A1B0")   # Detected as coordinates
-View.parse("ABC")      # Detected as text
+```go
+ViewParse("A0A1B0")   // Detected as coordinates
+ViewParse("ABC")      // Detected as text
 ```
 
-### Self-Documenting Code
+### Comprehensive Documentation
 
-Variable names explain intent. Comments only where behavior isn't obvious from the code itself.
+All functions, types, and complex logic have detailed comments explaining:
+- Purpose and behavior
+- Design decisions and trade-offs
+- Algorithm explanations
+- Error conditions
 
 ## Coordinate System
 
@@ -121,37 +135,41 @@ Variable names explain intent. Comments only where behavior isn't obvious from t
 - **Columns:** 0-35 (36 columns, left to right)
 - **Format:** Letter + number, e.g., `A0` (top-left), `F35` (bottom-right)
 
-## Example
+## Code Example
 
-```python
-from sign import View
+```go
+package main
 
-# From coordinates
-view = View.from_pixel_coordinates("A5A6A8A9A13A14")
-print(view.render())
+import "fmt"
 
-# From text (centered)
-view = View.parse("ABC")
-print(view.render())
+func example() {
+    // From coordinates
+    view, _ := ViewFromPixelCoordinates("A5A6A8A9A13A14")
+    fmt.Println(view.Render('*', ' '))
+
+    // From text (centered)
+    view, _ = ViewParse("ABC")
+    fmt.Println(view.Render('*', ' '))
+}
 ```
 
 ## Extending the Simulator
 
 ### Add New Characters
 
-Edit `fonts.py` and add to the `GLYPHS` dictionary:
+Edit `fonts.go` and add to the `glyphs` map:
 
-```python
-GLYPHS: dict[str, list[str]] = {
-    "A": [...],
-    "D": [
+```go
+var glyphs = map[rune][]string{
+    'A': {...},
+    'D': {
         "**** ",
         "*   *",
         "*   *",
         "*   *",
         "*   *",
         "**** ",
-    ],
+    },
 }
 ```
 
@@ -161,10 +179,64 @@ No other changes needed. The renderer automatically supports new characters.
 
 Current POC architecture supports easy upgrades:
 
-- **Persistence:** Wrap dict in Memory class, add database backend
-- **API:** Import `sign.py` and `fonts.py` directly in Flask/FastAPI
-- **Testability:** Add dependency injection to CLI (already uses module-level storage)
-- **Package Structure:** Split into `sign/` and `fonts/` packages when team grows
+- **Persistence:** Wrap map in Memory struct, add database backend
+- **API:** Import as package in HTTP server
+- **Package Structure:** Refactor into `sign/` and `fonts/` packages when team grows
+- **Concurrent Access:** Add mutex to storedViews map
+
+## Development
+
+### Build
+
+```bash
+go build -o electronic-sign
+```
+
+### Test
+
+```bash
+go test                # Run tests
+go test -v             # Verbose output
+go test -cover         # With coverage
+go test -bench=.       # Run benchmarks (if added)
+```
+
+### Format
+
+```bash
+go fmt ./...           # Format all Go files
+```
+
+### Lint
+
+```bash
+go vet ./...           # Run static analysis
+```
+
+## Technical Details
+
+### Design Principles
+
+- **Value semantics** - Pixels are structs, not pointers
+- **Sparse representation** - Only store active pixels
+- **Auto-detection** - Smart parsing of user input
+- **No external dependencies** - Pure Go standard library
+- **Comprehensive comments** - Enterprise-style documentation
+
+### Performance Characteristics
+
+- **Pixel creation:** O(1)
+- **View rendering:** O(Rows × Cols) = O(216)
+- **Coordinate parsing:** O(n) where n = input length
+- **Pixel lookup:** O(1) map access
+- **Memory:** O(active pixels), not O(total grid)
+
+### Error Handling
+
+All public functions return errors for invalid input:
+- Boundary validation on pixel creation
+- Format validation on parsing
+- Character validation on text rendering
 
 ## License
 
