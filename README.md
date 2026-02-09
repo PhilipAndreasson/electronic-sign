@@ -1,123 +1,171 @@
 # Electronic Sign Simulator
 
-An interactive application that simulates a 6×36 pixel electronic sign. Views
-can be created from raw pixel coordinates or from character sequences (A, B, C,
-1, 2, 3) rendered with a built-in bitmap font.
+Interactive 6×36 pixel electronic sign simulator. Create views from pixel coordinates or text, render them as ASCII art, and manage them with a simple command-line interface.
 
 ## Requirements
 
-- **Python 3.10+** (uses `X | Y` union syntax and `match` compatible patterns)
-- No external dependencies — the project uses only the Python standard library.
+- **Python 3.10+** (uses `X | Y` union syntax and pattern matching)
+- No external dependencies
 
 ## Project Structure
 
 ```
 electronic-sign/
-├── main.py              # Application entry point
-├── README.md
-├── sign/                # Core domain package
-│   ├── __init__.py
-│   ├── pixel.py         # Pixel coordinate model
-│   ├── view.py          # View (6×36 grid) model & coordinate parser
-│   ├── memory.py        # Ordered in-memory view storage
-│   ├── parser.py        # Input classification (coordinates vs text)
-│   └── cli.py           # Interactive command-line interface
-├── fonts/               # Bitmap font package
-│   ├── __init__.py
-│   ├── glyphs.py        # 5×6 glyph definitions for A-C, 1-3
-│   └── renderer.py      # Text-to-View renderer
-└── tests/               # Unit test suite
-    ├── __init__.py
-    ├── test_pixel.py
-    ├── test_view.py
-    ├── test_memory.py
-    ├── test_renderer.py
-    ├── test_parser.py
-    └── test_cli.py
+├── main.py          # Entry point
+├── sign.py          # Pixel and View classes (core domain)
+├── fonts.py         # Bitmap font rendering
+├── cli.py           # Command-based interactive interface
+└── test_sign.py     # Test suite
 ```
 
-## How to Run
-
-From the project root directory:
+## Quick Start
 
 ```bash
-python main.py
+python3.13 main.py
 ```
 
-This launches the interactive menu where you can:
+## Usage
 
-1. **Add a new view** — enter pixel coordinates (e.g. `A0A1B5F35`) or
-   characters (e.g. `ABC123`), preview it, and save with a name.
-2. **Print a specific view** — display a stored view by name.
-3. **Print all views** — display every view in memory.
-4. **Delete a specific view** — remove a single view by name.
-5. **Clear all views** — wipe the entire memory (with confirmation).
-6. **Exit** — quit the application.
-
-### Input Formats
-
-**Pixel coordinates:** A letter A–F (row) followed by a number 0–35 (column),
-concatenated without separators. Example:
+### Interactive Commands
 
 ```
-A5A6A8A9A13A14...
+>>> help
+Commands:
+  add              - Create and save a new view
+  show <name>      - Display a saved view
+  list             - List all saved views
+  delete <name>    - Remove a saved view
+  clear            - Delete all saved views
+  exit             - Quit the application
 ```
 
-**Character text:** A string of supported characters (A, B, C, 1, 2, 3) that
-are rendered using the built-in bitmap font. Example:
+### Creating Views
+
+**Pixel Coordinates:**
+```
+>>> add
+Enter pixels (A0A1B5) or text (ABC123): A0A1B0B1
+```
+
+**Text Rendering:**
+```
+>>> add
+Enter pixels (A0A1B5) or text (ABC123): ABC123
+```
+
+Supported characters: `A B C 1 2 3`
+
+### Managing Views
 
 ```
-ABC123
+>>> list
+Saved views:
+  • greeting
+  • test
+
+>>> show greeting
+── greeting ──
+                  ***
+                 *   *
+                 *****
+                 *   *
+                 *   *
+                 *   *
+
+>>> delete greeting
+✓ Deleted 'greeting'
 ```
 
-The application automatically detects which format you are using.
-
-## How to Run Tests
+## Running Tests
 
 ```bash
-python -m unittest discover -s tests -v
+python3.13 -m unittest test_sign -v
 ```
 
-This discovers and runs all test files in the `tests/` directory. The suite
-contains **80 tests** covering:
+**Test Coverage:**
+- Pixel creation, parsing, and value semantics
+- View parsing (coordinates and text)
+- Font rendering and validation
+- Challenge specification compliance
+- Boundary conditions and error handling
 
-- Pixel creation, parsing, and validation
-- View construction from coordinates and rendering
-- Challenge specification examples (both coordinate and text)
-- Memory CRUD operations and ordering
-- Input classification heuristic
-- CLI interaction flows (using dependency-injected I/O)
+## Design Highlights
 
-## Design Decisions
+### Immutable Value Objects
 
-### Separation of Concerns
+```python
+pixel = Pixel(0, 5)
+pixel.row  # 0 (read-only)
+```
 
-The codebase is split into clearly bounded packages:
+Pixels use `__slots__` for memory efficiency and implement proper equality/hashing for use in sets and dicts.
 
-- **`sign`** — core domain: `Pixel`, `View`, `Memory`, and input parsing.
-- **`fonts`** — glyph definitions and the text renderer, decoupled from the
-  core sign model so new fonts or characters can be added without touching
-  domain code.
-- **`tests`** — one test module per source module for clear traceability.
+### Sparse Grid Representation
 
-### Testability
+Views store only active (on) pixels in a set, not a full 2D array. Memory-efficient for partially lit signs.
 
-The `SignCLI` class accepts `input_fn` and `output_fn` callables via
-constructor injection, allowing the full CLI flow to be tested without
-monkey-patching `sys.stdin`/`sys.stdout` or spawning subprocesses.
+### Auto-Detection Parsing
 
-### Extensibility
+```python
+View.parse("A0A1B0")   # Detected as coordinates
+View.parse("ABC")      # Detected as text
+```
 
-- **Adding characters:** define a new entry in `fonts/glyphs.py` — the
-  renderer and parser pick it up automatically.
-- **Alternative UIs:** the domain layer (`View`, `Memory`, `parse_input`) has
-  no dependency on the CLI, so a web or GUI front-end can reuse it directly.
-- **Storage backends:** `Memory` could be swapped for a persistent
-  implementation (e.g. SQLite) behind the same interface.
+### Self-Documenting Code
 
-### Robustness
+Variable names explain intent. Comments only where behavior isn't obvious from the code itself.
 
-- All user input is validated with descriptive error messages.
-- Invalid menu choices, empty names, and malformed coordinates are handled
-  gracefully without crashing.
-- `Ctrl+C` and `Ctrl+D` (EOF) exit cleanly.
+## Coordinate System
+
+- **Rows:** A-F (6 rows, top to bottom)
+- **Columns:** 0-35 (36 columns, left to right)
+- **Format:** Letter + number, e.g., `A0` (top-left), `F35` (bottom-right)
+
+## Example
+
+```python
+from sign import View
+
+# From coordinates
+view = View.from_pixel_coordinates("A5A6A8A9A13A14")
+print(view.render())
+
+# From text (centered)
+view = View.parse("ABC")
+print(view.render())
+```
+
+## Extending the Simulator
+
+### Add New Characters
+
+Edit `fonts.py` and add to the `GLYPHS` dictionary:
+
+```python
+GLYPHS: dict[str, list[str]] = {
+    "A": [...],
+    "D": [
+        "**** ",
+        "*   *",
+        "*   *",
+        "*   *",
+        "*   *",
+        "**** ",
+    ],
+}
+```
+
+No other changes needed. The renderer automatically supports new characters.
+
+### Upgrade Path to Production
+
+Current POC architecture supports easy upgrades:
+
+- **Persistence:** Wrap dict in Memory class, add database backend
+- **API:** Import `sign.py` and `fonts.py` directly in Flask/FastAPI
+- **Testability:** Add dependency injection to CLI (already uses module-level storage)
+- **Package Structure:** Split into `sign/` and `fonts/` packages when team grows
+
+## License
+
+MIT
