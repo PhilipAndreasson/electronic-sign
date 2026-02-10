@@ -158,37 +158,46 @@ func ViewFromPixelCoordinates(coordinateSequence string) (*View, error) {
 
 // Parse auto-detects input format and parses accordingly.
 //
-// Heuristic: If input contains only A-F and 0-9, AND has at least
-// one digit, treat as pixel coordinates. Otherwise, treat as text
-// to be rendered using the bitmap font.
+// Heuristic: Coordinates follow letter-digit pattern (A0, B10, C2).
+// If we see a letter followed immediately by another letter, it's text.
+// If we see patterns like A0, B5, etc., it's coordinates.
 //
-// This allows users to type 'ABC' (renders as text) or 'A0B1C2'
-// (creates pixels at those coordinates) without specifying format.
+// Examples:
+//   "ABC" -> text (letters not followed by digits)
+//   "ABC123" -> text (consecutive letters at start)
+//   "A0B1C2" -> coordinates (letter-digit pairs)
 //
 // Returns error if input is invalid for detected format
 func ViewParse(userInput string) (*View, error) {
 	cleaned := strings.ToUpper(strings.ReplaceAll(userInput, " ", ""))
 
-	// Detection logic: coordinates must have digits, text may not
-	hasOnlyValidChars := true
-	hasDigits := false
+	// Check if it looks like coordinate format
+	isCoordinates := false
+	runes := []rune(cleaned)
 
-	for _, ch := range cleaned {
-		if !strings.ContainsRune("ABCDEF0123456789", ch) {
-			hasOnlyValidChars = false
+	for i := 0; i < len(runes)-1; i++ {
+		currentIsLetter := unicode.IsLetter(runes[i]) && strings.ContainsRune("ABCDEF", runes[i])
+		nextIsDigit := unicode.IsDigit(runes[i+1])
+		nextIsLetter := unicode.IsLetter(runes[i+1])
+
+		// If we see a letter followed by another letter, it's definitely text
+		if currentIsLetter && nextIsLetter {
+			isCoordinates = false
 			break
 		}
-		if unicode.IsDigit(ch) {
-			hasDigits = true
+
+		// If we see A-F followed by a digit, looks like coordinates
+		if currentIsLetter && nextIsDigit {
+			isCoordinates = true
 		}
 	}
 
-	if hasOnlyValidChars && hasDigits {
+	if isCoordinates {
 		// Looks like coordinates (e.g., 'A0B1C2')
 		return ViewFromPixelCoordinates(cleaned)
 	}
 
-	// Treat as text to render (e.g., 'ABC')
+	// Treat as text to render (e.g., 'ABC', 'ABC123')
 	return RenderText(cleaned)
 }
 
