@@ -33,7 +33,7 @@ var storedViews = make(map[string]*View)
 func Run() {
 	// Display welcome message with command menu
 	fmt.Println("╔════════════════════════════════════════╗")
-	fmt.Println("║     Electronic Sign Simulator         ║")
+	fmt.Println("║    Electronic Sign Simulator          ║")
 	fmt.Println("╠════════════════════════════════════════╣")
 	fmt.Println("║  Commands:                             ║")
 	fmt.Println("║    add              Create new view    ║")
