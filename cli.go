@@ -32,7 +32,8 @@ var storedViews = make(map[string]*View)
 // Handles EOF gracefully to allow clean shutdown.
 func Run() {
 	fmt.Println("Electronic Sign Simulator")
-	fmt.Println("Type 'help' for available commands\n")
+	fmt.Println("Type 'help' for available commands")
+	fmt.Println()
 
 	scanner := bufio.NewScanner(os.Stdin)
 
