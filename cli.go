@@ -32,18 +32,18 @@ var storedViews = make(map[string]*View)
 // Handles EOF gracefully to allow clean shutdown.
 func Run() {
 	// Display welcome message with command menu
-	fmt.Println("╔════════════════════════════════════════╗")
-	fmt.Println("║    Electronic Sign Simulator          ║")
-	fmt.Println("╠════════════════════════════════════════╣")
-	fmt.Println("║  Commands:                             ║")
-	fmt.Println("║    add              Create new view    ║")
-	fmt.Println("║    show <name>      Display view       ║")
-	fmt.Println("║    list             List all views     ║")
-	fmt.Println("║    delete <name>    Remove view        ║")
-	fmt.Println("║    clear            Delete all views   ║")
-	fmt.Println("║    help             Show this menu     ║")
-	fmt.Println("║    exit             Quit               ║")
-	fmt.Println("╚════════════════════════════════════════╝")
+	fmt.Println("╔══════════════════════════════════════╗")
+	fmt.Println("║   Electronic Sign Simulator          ║")
+	fmt.Println("╠══════════════════════════════════════╣")
+	fmt.Println("║  Commands:                           ║")
+	fmt.Println("║    add            Create new view    ║")
+	fmt.Println("║    show <name>    Display view       ║")
+	fmt.Println("║    list           List all views     ║")
+	fmt.Println("║    delete <name>  Remove view        ║")
+	fmt.Println("║    clear          Delete all views   ║")
+	fmt.Println("║    help           Show this menu     ║")
+	fmt.Println("║    exit           Quit               ║")
+	fmt.Println("╚══════════════════════════════════════╝")
 	fmt.Println()
 
 	scanner := bufio.NewScanner(os.Stdin)
@@ -92,15 +92,15 @@ func Run() {
 
 // showHelp displays available commands and their usage.
 func showHelp() {
-	fmt.Println("╔════════════════════════════════════════╗")
-	fmt.Println("║  Commands:                             ║")
-	fmt.Println("║    add              Create new view    ║")
-	fmt.Println("║    show <name>      Display view       ║")
-	fmt.Println("║    list             List all views     ║")
-	fmt.Println("║    delete <name>    Remove view        ║")
-	fmt.Println("║    clear            Delete all views   ║")
-	fmt.Println("║    exit             Quit               ║")
-	fmt.Println("╚════════════════════════════════════════╝")
+	fmt.Println("╔══════════════════════════════════════╗")
+	fmt.Println("║  Commands:                           ║")
+	fmt.Println("║    add            Create new view    ║")
+	fmt.Println("║    show <name>    Display view       ║")
+	fmt.Println("║    list           List all views     ║")
+	fmt.Println("║    delete <name>  Remove view        ║")
+	fmt.Println("║    clear          Delete all views   ║")
+	fmt.Println("║    exit           Quit               ║")
+	fmt.Println("╚══════════════════════════════════════╝")
 }
 
 // handleAdd creates a new view from user input and saves it with a name.
