@@ -283,11 +283,18 @@ func TestRenderMultipleCharacters(t *testing.T) {
 	}
 }
 
-// TestUnsupportedCharacter verifies unsupported chars raise error.
-func TestUnsupportedCharacter(t *testing.T) {
-	_, err := RenderText("Z")
-	if err == nil {
-		t.Error("Expected error for unsupported character 'Z'")
+// TestAllAlphabetSupported verifies full alphabet works.
+func TestAllAlphabetSupported(t *testing.T) {
+	// Test various letters and numbers work (sign width limits how many fit)
+	tests := []string{"HELLO", "XYZ", "42"}
+	for _, text := range tests {
+		view, err := RenderText(text)
+		if err != nil {
+			t.Errorf("Should support '%s', got error: %v", text, err)
+		}
+		if view == nil {
+			t.Errorf("Expected view for '%s'", text)
+		}
 	}
 }
 

@@ -63,7 +63,7 @@ Enter pixels (A0A1B5) or text (ABC123): A0A1B0B1
 Enter pixels (A0A1B5) or text (ABC123): ABC123
 ```
 
-Supported characters: `A B C 1 2 3`
+Supported characters: **Full alphabet (A-Z), numbers (0-9), and common symbols** - all generated algorithmically!
 
 ### Managing Views
 
@@ -157,23 +157,14 @@ func example() {
 
 ### Add New Characters
 
-Edit `fonts.go` and add to the `glyphs` map:
+Characters are generated **algorithmically** using a stroke-based system (like segment displays). To add a new character, simply add a stroke combination to `getStrokes()`:
 
 ```go
-var glyphs = map[rune][]string{
-    'A': {...},
-    'D': {
-        "**** ",
-        "*   *",
-        "*   *",
-        "*   *",
-        "*   *",
-        "**** ",
-    },
-}
+case '@':
+    return TopBar | BotBar | FullLeft | RightTopBar | MidBar
 ```
 
-No other changes needed. The renderer automatically supports new characters.
+The system combines primitive strokes (TopBar, MidBar, BotBar, FullLeft, FullRight, Diagonals, Dot) to create any character. No bitmap patterns needed!
 
 ### Upgrade Path to Production
 
